@@ -1,29 +1,48 @@
 'use strict';
 
-// const createError = require('http-errors');
+let jwt = require('jsonwebtoken');
+const config = require('../config.js');
+const createError = require('http-errors');
 
-// exports.isLoggedIn = () => (req, res, next) => {
-//   if (req.session.currentUser) {
-//     next();
-//   } else {
-//     next(createError(401));
-//   }
-// };
+exports.checkToken = (req, res, next) => {
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (token) {
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length);
+    }
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        next(createError(403, 'Token is not valid'));
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    });
+  } else {
+    return res.json({ success: false, message: "Auth token is not supplied" })
+  }
+};
 
-// exports.isNotLoggedIn = () => (req, res, next) => {
-//   if (!req.session.currentUser) {
-//     next();
-//   } else {
-//     next(createError(403));
-//   }
-// };
+exports.checkNotToken = (req, res, next) => {
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (!token) {
+    next();
+  } else {
+    jwt.verify(token, config.secret, (err) => {
+      if (err) {
+        next();
+      } else {
+        next(createError(403, 'Just have a valid token'));
+      }
+    })
+  };
+};
 
-// exports.validationLoggin = () => (req, res, next) => {
-//   const { email, password } = req.body;
-
-//   if (!email || !password) {
-//     next(createError(422));
-//   } else {
-//     next();
-//   }
-// };
+exports.loginFullFilled = (req, res, next) => {
+  const { email, password } = req.body;
+  if (email && password) {
+    next();
+  } else {
+    next(createError(403, 'Some fields are empty'));
+  };
+}

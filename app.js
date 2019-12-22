@@ -4,18 +4,19 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cors = require('cors');
 
 const authRouter = require('./routes/auth');
 const contactsRouter = require('./routes/contacts');
 
 const app = express();
 
-// app.use(
-//   cors({
-//     credentials: true,
-//     origin: [process.env.PUBLIC_DOMAIN]
-//   })
-// );
+app.use(
+  cors({
+    credentials: true,
+    origin: 'http://localhost:5000'
+  })
+);
 
 app.use(logger('dev'));
 app.use(express.json());
