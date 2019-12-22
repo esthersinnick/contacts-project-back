@@ -7,7 +7,7 @@ const createError = require('http-errors');
 const bcrypt = require('bcrypt');
 let jwt = require('jsonwebtoken');
 
-const { checkToken, checkNotToken, loginFullFilled } = require('../helpers/middlewares');
+const { checkNotToken, loginFullFilled } = require('../helpers/middlewares');
 let config = require('../config');
 
 //creo un array de ususarios "fake", pero realmente estos usuarios se almacenarían y se obtendrían desde la base de datos.
@@ -24,13 +24,13 @@ const users = [
   }
 ];
 
-router.get('/', checkToken, function (req, res, next) {
-  console.log("you are login!")
-  res.json({
-    success: true,
-    message: 'Index page'
-  });
-});
+// router.get('/', checkToken, function (req, res, next) {
+//   console.log("you are login!")
+//   res.json({
+//     success: true,
+//     message: 'Index page'
+//   });
+// });
 
 router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => {
   const { email, password, remember } = req.body;
@@ -39,27 +39,30 @@ router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => 
     const user = users.find(user => user.email === email)
     if (user) {
       if (bcrypt.compareSync(password, user.password)) {
-        let token;
-        if (remember) {
-          token = jwt.sign(
-            { user: user._id },
+        let token = remember ?
+          jwt.sign(
+            {
+              userId: user._id,
+              expires: false
+            },
             config.secret
-          );
-        } else {
-          token = jwt.sign(
-            { user: user._id },
+          )
+          : jwt.sign(
+            {
+              userId: user._id,
+              expires: true
+            },
             config.secret,
             {
               expiresIn: '24h'
             }
           );
-        }
         res.json({
           success: true,
           token,
           user: {
             _id: user._id,
-            email: user.email
+            email: user.email,
           }
         });
       } else {
@@ -68,11 +71,49 @@ router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => 
     } else {
       next(createError(404, 'User not found'));
     }
-
   } catch (error) {
     next(error);
   }
 }
 );
+
+router.post('/renewToken', async (req, res, next) => {
+  try {
+    const { token } = req.body
+    jwt.verify(token, config.secret, (err, decoded) => {
+      req.decoded = decoded;
+      const user = users.find(user => user._id === decoded.userId)
+      //crear token nuevo
+      let newToken = decoded.expires ?
+        jwt.sign(
+          {
+            userId: user._id,
+            expires: false
+          },
+          config.secret,
+          {
+            expiresIn: '24h'
+          }
+        )
+        : jwt.sign(
+          {
+            userId: user._id,
+            expires: true
+          },
+          config.secret
+        )
+      res.json({
+        success: true,
+        token: newToken,
+        user: {
+          _id: user._id,
+          email: user.email,
+        }
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+})
 
 module.exports = router;
