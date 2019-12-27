@@ -81,6 +81,7 @@ router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => 
 router.post('/renewToken', async (req, res, next) => {
   try {
     const { token } = req.body
+    console.log(token)
     jwt.verify(token, config.secret, (err, decoded) => {
       req.decoded = decoded;
       const user = users.find(user => user._id === decoded.userId)
@@ -113,6 +114,7 @@ router.post('/renewToken', async (req, res, next) => {
       });
     });
   } catch (error) {
+    console.log('nooooo')
     next(error);
   }
 })
