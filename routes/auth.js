@@ -57,14 +57,15 @@ router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => 
               expiresIn: '24h'
             }
           );
-        res.json({
+        const userData = {
           success: true,
           token,
           user: {
             _id: user._id,
             email: user.email,
           }
-        });
+        }
+        res.json(userData);
       } else {
         next(createError(401, 'Incorrect user or password'));
       }
