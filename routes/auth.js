@@ -24,22 +24,15 @@ const users = [
   }
 ];
 
-// router.get('/', checkToken, function (req, res, next) {
-//   console.log("you are login!")
-//   res.json({
-//     success: true,
-//     message: 'Index page'
-//   });
-// });
-
 router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => {
   const { email, password, remember } = req.body;
   try {
+    console.log(typeof remember)
     //aquí buscaría el usuario en al base de datos, pero como lo he "mockeado", lo busco en el array
     const user = users.find(user => user.email === email)
     if (user) {
       if (bcrypt.compareSync(password, user.password)) {
-        let token = remember ?
+        const token = remember ? //comprobar que hace bien este if!!!!
           jwt.sign(
             {
               userId: user._id,
@@ -78,15 +71,13 @@ router.post('/login', checkNotToken, loginFullFilled, async (req, res, next) => 
 }
 );
 
-router.post('/renewToken', async (req, res, next) => {
+router.post('/renew-token', async (req, res, next) => {
   try {
     const { token } = req.body
-    console.log(token)
     jwt.verify(token, config.secret, (err, decoded) => {
       req.decoded = decoded;
       const user = users.find(user => user._id === decoded.userId)
-      //crear token nuevo
-      let newToken = decoded.expires ?
+      const newToken = !decoded.expires ?
         jwt.sign(
           {
             userId: user._id,
@@ -114,7 +105,6 @@ router.post('/renewToken', async (req, res, next) => {
       });
     });
   } catch (error) {
-    console.log('nooooo')
     next(error);
   }
 })

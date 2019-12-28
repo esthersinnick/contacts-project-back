@@ -6,36 +6,30 @@ const createError = require('http-errors');
 
 exports.checkToken = (req, res, next) => {
   let token = req.headers['x-access-token'] || req.headers['authorization'];
-  if (token) {
-    if (token.startsWith('Bearer ')) {
-      token = token.slice(7, token.length);
-    }
-    jwt.verify(token, config.secret, (err, decoded) => {
-      if (err) {
-        next(createError(403, 'Token is not valid'));
-      } else {
-        req.decoded = decoded;
-        next();
-      }
-    });
-  } else {
-    return res.json({ success: false, message: "Auth token is not supplied" })
+  if (!token) return res.json({ success: false, message: "Auth token is not supplied" })
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7, token.length);
   }
+  jwt.verify(token, config.secret, (err, decoded) => {
+    if (err) {
+      next(createError(403, 'Token is not valid'));
+    } else {
+      req.decoded = decoded;
+      next();
+    }
+  });
 };
 
 exports.checkNotToken = (req, res, next) => {
   let token = req.headers['x-access-token'] || req.headers['authorization'];
-  if (!token) {
-    next();
-  } else {
-    jwt.verify(token, config.secret, (err) => {
-      if (err) {
-        next();
-      } else {
-        next(createError(403, 'Just have a valid token'));
-      }
-    })
-  };
+  if (!token) return next();
+  jwt.verify(token, config.secret, (err) => {
+    if (err) {
+      next();
+    } else {
+      next(createError(403, 'Just have a valid token'));
+    }
+  })
 };
 
 exports.loginFullFilled = (req, res, next) => {
