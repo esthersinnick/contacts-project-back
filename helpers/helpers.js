@@ -7,7 +7,7 @@ exports.createToken = (user, rememberStr) => {
   const options = {};
   const remember = JSON.parse(rememberStr);
   if (!remember) {
-    options.expiresIn = 10
+    options.expiresIn = '24h';
   } else {
     options.expiresIn = '999y';
   }
