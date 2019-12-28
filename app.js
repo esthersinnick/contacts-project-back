@@ -5,6 +5,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
+const createError = require('http-errors');
 
 const authRouter = require('./routes/auth');
 const contactsRouter = require('./routes/contacts');
@@ -27,18 +28,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/auth', authRouter);
 app.use('/contacts', contactsRouter);
 
-
-app.use((req, res, next) => {
-  res.status(404).json({ code: 'not found' });
+app.use((error, req, res, next) => {
+  res.status(error.status).send(error.message);
 });
-
-app.use((err, req, res, next) => {
-  console.error('ERROR', req.method, req.path, err);
-  if (!res.headersSent) {
-    const statusError = err.status || '500';
-    res.status(statusError).json(err);
-  }
-});
-
 
 module.exports = app;

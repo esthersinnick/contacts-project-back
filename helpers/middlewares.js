@@ -37,6 +37,6 @@ exports.loginFullFilled = (req, res, next) => {
   if (email && password) {
     next();
   } else {
-    next(createError(403, 'Some fields are empty'));
+    next(createError(400, 'Some fields are empty'));
   };
 }
